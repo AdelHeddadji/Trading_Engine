@@ -5,14 +5,9 @@
 
 class Order {
 public:
-    Order(int id, const std::string& type, double price, int quantity);
-    int getId() const;
-    std::string getType() const;
-    double getPrice() const;
-    int getQuantity() const;
-
-private:
+    Order(const std::string& name, const std::string& type, double price, int quantity);
     int id;
+    std::string name;
     std::string type;
     double price;
     int quantity;

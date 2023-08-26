@@ -1,21 +1,21 @@
 // order.cpp
 #include "order.h"
 
-Order::Order(int id, const std::string& type, double price, int quantity)
-    : id(id), type(type), price(price), quantity(quantity) {}
+Order::Order(const std::string& name, const std::string& type, double price, int quantity)
+    : name(name), type(type), price(price), quantity(quantity) {}
 
-int Order::getId() const {
-    return id;
-}
+// int Order::getId() const {
+//     return id;
+// }
 
-std::string Order::getType() const {
-    return type;
-}
+// std::string Order::getType() const {
+//     return type;
+// }
 
-double Order::getPrice() const {
-    return price;
-}
+// double Order::getPrice() const {
+//     return price;
+// }
 
-int Order::getQuantity() const {
-    return quantity;
-}
+// int Order::getQuantity() const {
+//     return quantity;
+// }
