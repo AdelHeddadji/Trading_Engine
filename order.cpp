@@ -1,8 +1,11 @@
 // order.cpp
 #include "order.h"
 
-Order::Order(const std::string& name, const std::string& type, double price, int quantity)
-    : name(name), type(type), price(price), quantity(quantity) {}
+#include <sstream>
+
+Order::Order(int id, const std::string& type, double price, int quantity)
+    : id(id), type(type), price(price), quantity(quantity) {}
+
 
 // int Order::getId() const {
 //     return id;
@@ -19,3 +22,9 @@ Order::Order(const std::string& name, const std::string& type, double price, int
 // int Order::getQuantity() const {
 //     return quantity;
 // }
+
+std::string Order::toString() const {
+    std::ostringstream os;
+    os << id << "," << type << "," << price << "," << quantity;
+    return os.str();
+}

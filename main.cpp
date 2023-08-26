@@ -5,10 +5,9 @@
 #include <vector>
 #include "order.h"
 #include "order_book.h"
+#include "api.h"
 
 using namespace std;
-
-pair<int, int> getCurrentID;
 
 int main(int argc, char *argv[]) {
     if (argc < 5) {
@@ -16,20 +15,23 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    OrderBook myOrderBook;
+    vector<string> all_lines;
+    int current_id = 0, total_size = 0;
+
+    DataHandler dataHandle = DataHandler("data.csv");
+
+    dataHandle.read(current_id, total_size, all_lines);
+
+    OrderBook myOrderBook = OrderBook(all_lines);
 
     string operation = argv[1];
 
-    // int current_id = 0, total_size = 0;
-    vector<string> all_lines;
-
     if (operation == "add") {
-        string stockName = argv[2];
-        string type = argv[3];
-        float price = stof(argv[4]);
-        int quantity = stoi(argv[5]);
-        Order new_order = Order(stockName, "buy", price, quantity);
-        myOrderBook.addOrder(new_order);
+        string type = argv[2];
+        float price = stof(argv[3]);
+        int quantity = stoi(argv[4]);
+        Order *currOrder = new Order(current_id, type, price, quantity);
+        myOrderBook.addOrder(currOrder);
     } 
     else if (operation == "remove") {
         cout << "Order has been removed." << endl;
@@ -37,6 +39,8 @@ int main(int argc, char *argv[]) {
     else {
         cout << "Unknown operation." << endl;
     }
+
+    dataHandle.write(myOrderBook);
 
     return 0;
 }

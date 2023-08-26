@@ -2,10 +2,10 @@
 CXX = g++
 
 # Flags to pass to the compiler
-CXXFLAGS = -Wall -Wextra
+CXXFLAGS = -Wall -Wextra -std=c++20 -g
 
 # Source files
-SOURCES = main.cpp order.cpp order_book.cpp
+SOURCES = main.cpp order.cpp order_book.cpp api.cpp lib.cpp
 
 # Object files
 OBJECTS = $(SOURCES:.cpp=.o)

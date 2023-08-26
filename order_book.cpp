@@ -1,48 +1,54 @@
 // order_book.cpp
 #include "order_book.h"
 #include <algorithm>
-#include <iostream>
-#include <fstream>
-#include <sstream>
+#include <vector>
+#include <string>
+#include "order.h"
+#include "lib.h"
 
 using namespace std;
 
-void OrderBook::addOrder(Order& order) {
-    int current_id = 0;
-    int total_size = 0;
-    vector<string> all_lines;
-    ifstream readFile("order_book_data.csv");
-    if (readFile.is_open() && readFile.peek() != std::ifstream::traits_type::eof()) {
-        string line;
-        while (getline(readFile, line)) {
-            all_lines.push_back(line);
-        }
-        if (!all_lines.empty()) {
-            stringstream ss(all_lines[0]);
-            ss >> current_id >> total_size;
-        }
-        readFile.close();
-    } else {
-        cout << "The file is empty or could not be opened, initializing current_id and total_size to 0." << endl;
+OrderBook::OrderBook(vector<string>& data) {
+    if (data.size() == 0) {
+        this->currentID = 0, this->totalOrders = 0;
+        return;
     }
+    vector<string> firstLine = split(data[0], " ");
+    this->currentID = stoi(firstLine[0]), this->totalOrders = stoi(firstLine[1]);
 
-    current_id++;
-    total_size++;
+    for (int i = 1; i < data.size(); i++) {
+        vector<string> line = split(data[0], ",");
+        int id = stoi(line[0]), quantity = stoi(line[3]);
+        float price = stof(line[2]);
+        string type =line[1]; 
+        Order *currOrder = new Order(id, type, price, quantity);
+        this->orderMap[id] = currOrder;
+        addOrder(currOrder);
+    }
+}   
 
-    ofstream writeFile("order_book_data.csv");
-    if (writeFile.is_open()) {
-        writeFile << current_id << " " << total_size << endl;
-
-        for (size_t i = 1; i < all_lines.size(); ++i) {
-            writeFile << all_lines[i] << endl;
+void OrderBook::addOrder(Order* order) {
+    this->orderMap[order->id] = order;
+    float price = order->price;
+    if (order->type == "buy") {
+            if (!this->buyLevels.count(price)) {
+                vector<Order*> initialOrders;
+                initialOrders.push_back(order);
+                PriceLevel  *currPriceLevel = new PriceLevel(price, initialOrders); 
+                this->buyLevels[price] = currPriceLevel;
+                return;
+            }
+            this->buyLevels[price]->orders.push_back(order);
         }
-
-        writeFile << current_id << "," << order.name << "," << order.type << "," << order.price << "," << order.quantity << endl;
-        
-        writeFile.close();
-        cout << "Order has been added to the order book." << endl;
-    } else {
-        cout << "Failed to open the file for writing." << endl;
+    else if (order->type == "sell") {
+        if (!this->buyLevels.count(price)) {
+            vector<Order*> initialOrders;
+            initialOrders.push_back(order);
+            PriceLevel  *currPriceLevel = new PriceLevel(price, initialOrders); 
+            this->sellLevels[price] = currPriceLevel;
+            return;
+        }
+        this->sellLevels[price]->orders.push_back(order);
     }
 }
 

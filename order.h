@@ -5,9 +5,9 @@
 
 class Order {
 public:
-    Order(const std::string& name, const std::string& type, double price, int quantity);
+    Order(int id, const std::string& type, double price, int quantity);
+    std::string toString() const;
     int id;
-    std::string name;
     std::string type;
     double price;
     int quantity;
