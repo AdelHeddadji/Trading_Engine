@@ -84,12 +84,17 @@ void OrderBook::removeOrder(int id) {
     this->totalOrders--;
 }
 
-
-
-// void OrderBook::modifyOrder(int id, int newQuantity) {
-//     // Implementation to find an order by ID and modify its quantity
-//     // ...
-// }
+void OrderBook::modifyOrder(int id, float newPrice, int newQuantity) {
+    if (!this->orderMap.count(id)) {
+        printf("Order id not present in Orderbook");
+        return;
+    }
+    Order *oldOrder = this->orderMap[id];
+    Order *newOrder = new Order(id, oldOrder->type, newPrice, newQuantity);
+    this->removeOrder(id);
+    this->addOrder(newOrder, false);
+    this->totalOrders++;
+}
 
 // void OrderBook::executeTrades() {
 //     // Implementation for matching buy and sell orders and executing trades

@@ -32,6 +32,12 @@ int main(int argc, char *argv[]) {
         myOrderBook.removeOrder(id);
         // cout << "Order has been removed." << endl;
     }
+    else if (operation == "modify") {
+        int id = stoi(argv[2]);
+        float price = stof(argv[3]);
+        int quantity = stoi(argv[4]);
+        myOrderBook.modifyOrder(id, price, quantity);
+    }
     else {
         cout << "Unknown operation." << endl;
     }
