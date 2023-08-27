@@ -23,7 +23,8 @@ struct PriceLevel {
 class OrderBook {
 public:
     OrderBook(std::vector<std::string>& data);
-    void addOrder(Order* order);
+    void addOrder(Order* order, bool isNew);
+    void removeOrder(int id);
     // getters for private members (const because they don't modify the object)
     int getCurrentID() const { return currentID; }
     int getTotalOrders() const { return totalOrders; }

@@ -17,17 +17,22 @@ OrderBook::OrderBook(vector<string>& data) {
     this->currentID = stoi(firstLine[0]), this->totalOrders = stoi(firstLine[1]);
 
     for (int i = 1; i < data.size(); i++) {
-        vector<string> line = split(data[0], ",");
+        vector<string> line = split(data[i], ",");
         int id = stoi(line[0]), quantity = stoi(line[3]);
         float price = stof(line[2]);
         string type =line[1]; 
         Order *currOrder = new Order(id, type, price, quantity);
         this->orderMap[id] = currOrder;
-        addOrder(currOrder);
+        addOrder(currOrder, false);
     }
 }   
 
-void OrderBook::addOrder(Order* order) {
+void OrderBook::addOrder(Order* order, bool isNew) {
+    if (isNew) {
+        this->currentID++;
+        this->totalOrders++;
+        order->id = this->currentID;
+    }
     this->orderMap[order->id] = order;
     float price = order->price;
     if (order->type == "buy") {
@@ -52,10 +57,34 @@ void OrderBook::addOrder(Order* order) {
     }
 }
 
-// void OrderBook::removeOrder(int id) {
-//     // Implementation to remove an order by ID from buyOrders and sellOrders
-//     // ...
-// }
+void OrderBook::removeOrder(int id) {
+    if (!this->orderMap.count(id)) {
+        printf("Order id not present in Orderbook");
+        return;
+    }
+    Order *temp = this->orderMap[id];
+    map<float, PriceLevel*>& levels = (temp->type == "buy") ? this->buyLevels : this->sellLevels;
+
+    if (levels.count(temp->price)) {
+        auto& orders = levels[temp->price]->orders;
+        for (auto it = orders.begin(); it != orders.end(); ++it) {
+            if ((*it)->id == id) {
+                orders.erase(it);
+                if (orders.empty()) {
+                    delete levels[temp->price];
+                    levels.erase(temp->price);
+                }
+                
+                break;
+            }
+        }
+    }
+    delete this->orderMap[id];
+    this->orderMap.erase(id);
+    this->totalOrders--;
+}
+
+
 
 // void OrderBook::modifyOrder(int id, int newQuantity) {
 //     // Implementation to find an order by ID and modify its quantity

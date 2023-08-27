@@ -10,11 +10,6 @@
 using namespace std;
 
 int main(int argc, char *argv[]) {
-    if (argc < 5) {
-        cout << "Usage: ./trading_engine add <Name> <Price> <Quantity>" << endl;
-        return 1;
-    }
-
     vector<string> all_lines;
     int current_id = 0, total_size = 0;
 
@@ -25,16 +20,17 @@ int main(int argc, char *argv[]) {
     OrderBook myOrderBook = OrderBook(all_lines);
 
     string operation = argv[1];
-
     if (operation == "add") {
         string type = argv[2];
         float price = stof(argv[3]);
         int quantity = stoi(argv[4]);
         Order *currOrder = new Order(current_id, type, price, quantity);
-        myOrderBook.addOrder(currOrder);
+        myOrderBook.addOrder(currOrder, true);
     } 
     else if (operation == "remove") {
-        cout << "Order has been removed." << endl;
+        int id = stoi(argv[2]);
+        myOrderBook.removeOrder(id);
+        // cout << "Order has been removed." << endl;
     }
     else {
         cout << "Unknown operation." << endl;
