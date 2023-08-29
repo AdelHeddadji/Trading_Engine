@@ -2,6 +2,7 @@
 #pragma once
 
 #include <string>
+#include <chrono>
 
 class Order {
 public:
@@ -11,4 +12,5 @@ public:
     std::string type;
     double price;
     int quantity;
+    std::chrono::system_clock::time_point timestamp;
 };

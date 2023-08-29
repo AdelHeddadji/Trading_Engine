@@ -26,6 +26,7 @@ public:
     void addOrder(Order* order, bool isNew);
     void removeOrder(int id);
     void modifyOrder(int id, float newPrice, int newQuantity);
+    void priceTimeMatch();
     // getters for private members (const because they don't modify the object)
     int getCurrentID() const { return currentID; }
     int getTotalOrders() const { return totalOrders; }

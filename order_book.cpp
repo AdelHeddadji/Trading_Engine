@@ -96,7 +96,46 @@ void OrderBook::modifyOrder(int id, float newPrice, int newQuantity) {
     this->totalOrders++;
 }
 
-// void OrderBook::executeTrades() {
-//     // Implementation for matching buy and sell orders and executing trades
-//     // ...
-// }
+void OrderBook::priceTimeMatch() {
+    for (auto& sellPair : sellLevels) {
+        float sellPrice = sellPair.first;
+        auto& sellOrders = sellPair.second->orders;
+
+        while (!sellOrders.empty()) {
+            auto& sellOrder = sellOrders[0];
+
+            auto it = buyLevels.lower_bound(sellPrice);
+            if (it == buyLevels.end()) {
+                break; 
+            }
+
+            float buyPrice = it->first;
+            auto& buyOrders = it->second->orders;
+
+            auto& buyOrder = buyOrders[0];
+
+            int matchQuantity = min(buyOrder->quantity, sellOrder->quantity);
+
+            buyOrder->quantity -= matchQuantity;
+            sellOrder->quantity -= matchQuantity;
+
+            if (buyOrder->quantity == 0) {
+                buyOrders.erase(buyOrders.begin());
+                delete buyOrder; 
+                if (buyOrders.empty()) {
+                    delete it->second; 
+                    buyLevels.erase(it);
+                }
+            }
+            if (sellOrder->quantity == 0) {
+                sellOrders.erase(sellOrders.begin());
+                delete sellOrder; 
+                if (sellOrders.empty()) {
+                    delete sellPair.second; 
+                    sellLevels.erase(sellPrice);
+                    break; 
+                }
+            }
+        }
+    }
+}
