@@ -1,48 +1,70 @@
-// api.cpp
 #include "api.h"
 #include <fstream>
 #include <iostream>
 #include <sstream>
 #include <unordered_map>
-#include "order_book.h"
+#include <vector>
+#include <mutex>
+#include <curl/curl.h>
+#include <thread>
+#include <condition_variable>
 
-void DataHandler::read(int& current_id, int& total_size, std::vector<std::string>& all_lines) {
-    std::ifstream readFile(filename);
-    if (readFile.is_open()) {  // Check if the file is open
-        if (readFile.peek() == std::ifstream::traits_type::eof()) {  // Check if the file is empty
-            std::cout << "The file is empty, initializing current_id and total_size to 0." << std::endl;
-        } else {
-            std::string line;
-            while (getline(readFile, line)) {
-                all_lines.push_back(line);
-            }
-            if (!all_lines.empty()) {
-                std::stringstream ss(all_lines[0]);
-                ss >> current_id >> total_size;
-            }
-        }
-        readFile.close();
-    } else {
-        std::cout << "The file could not be opened, initializing current_id and total_size to 0." << std::endl;
-    }
+std::mutex mtx;  // Mutex for critical sections
+std::condition_variable cv;  // Condition variable for signaling
+
+size_t writeCallback(void* contents, size_t size, size_t nmemb, void* userp) {
+    ((std::string*)userp)->append((char*)contents, size * nmemb);
+    return size * nmemb;
 }
 
+void DataHandler::read(int& current_id, int& total_size, std::vector<std::string>& all_lines) {
+    std::unique_lock<std::mutex> lock(mtx);  // Lock the mutex
+    CURL *curl = curl_easy_init();
+    if (curl) {
+        CURLcode res;
+        std::string readBuffer;
 
-void DataHandler::write(const OrderBook& ob) {
-    std::ofstream writeFile(filename);
-    if (writeFile.is_open()) {
-        writeFile << ob.getCurrentID() << " " << ob.getTotalOrders() << std::endl;
+        curl_easy_setopt(curl, CURLOPT_URL, "http://localhost:8080/read");
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeCallback);
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
 
-        // Accessing orders from OrderBook
-        const std::unordered_map<int, Order*>& orderMap = ob.getOrderMap();
-        for (const auto& [id, order] : orderMap) {
-            // Assuming Order has a method to convert it to string
-            writeFile << order->toString() << std::endl;
+        res = curl_easy_perform(curl);
+        if (res != CURLE_OK) {
+            std::cerr << "Curl failed: " << curl_easy_strerror(res) << std::endl;
+        } else {
+            std::stringstream ss(readBuffer);
+            ss >> current_id >> total_size;
+            std::string line;
+            while (getline(ss, line)) {
+                all_lines.push_back(line);
+            }
         }
         
-        writeFile.close();
-        // std::cout << "Data has been written to the order book." << std::endl;
-    } else {
-        std::cout << "Failed to open the file for writing." << std::endl;
+        curl_easy_cleanup(curl);
     }
+    cv.notify_one();  // Notify one waiting thread
+}
+
+void DataHandler::write(const OrderBook& ob) {
+    std::unique_lock<std::mutex> lock(mtx);  // Lock the mutex
+    CURL *curl = curl_easy_init();
+    if (curl) {
+        std::string postData = "current_id=" + std::to_string(ob.getCurrentID()) + "&total_size=" + std::to_string(ob.getTotalOrders());
+
+        const std::unordered_map<int, Order*>& orderMap = ob.getOrderMap();
+        for (const auto& [id, order] : orderMap) {
+            postData += "&order=" + order->toString();  // Assuming Order has a method to convert it to string
+        }
+
+        curl_easy_setopt(curl, CURLOPT_URL, "http://localhost:8080/write");
+        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, postData.c_str());
+
+        CURLcode res = curl_easy_perform(curl);
+        if (res != CURLE_OK) {
+            std::cerr << "Curl failed: " << curl_easy_strerror(res) << std::endl;
+        }
+
+        curl_easy_cleanup(curl);
+    }
+    cv.notify_one();  // Notify one waiting thread
 }
